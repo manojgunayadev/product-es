@@ -33,94 +33,99 @@ import java.util.*;
 
 public class Configuration {
 
-	private static Logger logger = Logger.getLogger(Configuration.class);
-	private Map<String, List<String>> configuration = new HashMap<String, List<String>>();
+    private static Logger logger = Logger.getLogger(Configuration.class);
+    private Map<String, List<String>> configuration = new HashMap<String, List<String>>();
 
-	public Configuration(InputStream xmlInputStream) throws Exception {
+    public Configuration(InputStream xmlInputStream) throws StoreConfigurationsException {
 
-		try {
-			DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
-			Document doc = dBuilder.parse(xmlInputStream);
+        try {
+            DocumentBuilder dBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document doc = dBuilder.parse(xmlInputStream);
 
-			Stack<String> nameStack = new Stack<String>();
+            Stack<String> nameStack = new Stack<String>();
 
-			if (doc.hasChildNodes()) {
-				NodeList nodeList = doc.getChildNodes();
-				for (int count = 0; count < nodeList.getLength(); count++) {
-					Node tempNode = nodeList.item(count);
-					// make sure it's element node.
-					if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
-						NodeList chiledNodeList = tempNode.getChildNodes();
-						readChildElements(chiledNodeList, nameStack);
-					}
-				}
-			}
+            if (doc.hasChildNodes()) {
+                NodeList nodeList = doc.getChildNodes();
+                for (int count = 0; count < nodeList.getLength(); count++) {
+                    Node tempNode = nodeList.item(count);
 
-		} catch (ParserConfigurationException e) {
-			logger.fatal("Problem in parsing the configuration file ", e);
-			throw new Exception(e);
-		} catch (SAXException e) {
-			logger.fatal("Problem in parsing the configuration file ", e);
-			throw new Exception(e);
-		} catch (IOException e) {
-			logger.fatal("Problem in parsing the configuration file ", e);
-			throw new Exception(e);
-		}
+                    if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
+                        NodeList chiledNodeList = tempNode.getChildNodes();
+                        readChildElements(chiledNodeList, nameStack);
+                    }
+                }
+            }
+        } catch (ParserConfigurationException parseConfigurationException) {
 
-	}
+            String msg = "Parser configuration error";
+            logger.error(msg, parseConfigurationException);
+            logger.fatal(msg, parseConfigurationException);
+            throw new StoreConfigurationsException("", parseConfigurationException);
+        } catch (SAXException saxException) {
 
-	private void readChildElements(NodeList nodeList, Stack<String> nameStack) {
+            String msg = "SAX exception occurred when passing stream";
+            logger.error(msg, saxException);
+            throw new StoreConfigurationsException(msg, saxException);
+        } catch (IOException ioException) {
 
-		for (int count = 0; count < nodeList.getLength(); count++) {
-			Node tempNode = nodeList.item(count);
-			if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
-				nameStack.push(tempNode.getNodeName());
-				if (elementHasText(tempNode)) {
-					String key = getKey(nameStack);
-					String value = tempNode.getFirstChild().getNodeValue();
-					addToConfiguration(key, value);
-				}
-				readChildElements(tempNode.getChildNodes(), nameStack);
-				nameStack.pop();
-			}
-		}
-	}
+            String msg = "IO exception occurred when passing stream";
+            logger.error(msg, ioException);
+            throw new StoreConfigurationsException(msg, ioException);
+        }
+    }
 
-	private boolean elementHasText(Node element) {
-		String text = element.getFirstChild().getNodeValue();
-		return text != null && text.trim().length() != 0;
-	}
+    private void readChildElements(NodeList nodeList, Stack<String> nameStack) {
 
-	private String getKey(Stack<String> nameStack) {
-		StringBuffer key = new StringBuffer();
-		for (int i = 0; i < nameStack.size(); i++) {
-			String name = nameStack.elementAt(i);
-			key.append(name).append(".");
-		}
-		key.deleteCharAt(key.lastIndexOf("."));
+        for (int count = 0; count < nodeList.getLength(); count++) {
+            Node tempNode = nodeList.item(count);
+            if (tempNode.getNodeType() == Node.ELEMENT_NODE) {
+                nameStack.push(tempNode.getNodeName());
+                if (elementHasText(tempNode)) {
+                    String key = getKey(nameStack);
+                    String value = tempNode.getFirstChild().getNodeValue();
+                    addToConfiguration(key, value);
+                }
+                readChildElements(tempNode.getChildNodes(), nameStack);
+                nameStack.pop();
+            }
+        }
+    }
 
-		return key.toString();
-	}
+    private boolean elementHasText(Node element) {
+        String text = element.getFirstChild().getNodeValue();
+        return text != null && text.trim().length() != 0;
+    }
 
-	private void addToConfiguration(String key, String value) {
-		List<String> list = configuration.get(key);
-		if (list == null) {
-			list = new ArrayList<String>();
-			list.add(value);
-			configuration.put(key, list);
-		} else {
-			if (!list.contains(value)) {
-				list.add(value);
-			}
-		}
-	}
+    private String getKey(Stack<String> nameStack) {
+        StringBuffer key = new StringBuffer();
+        for (int i = 0; i < nameStack.size(); i++) {
+            String name = nameStack.elementAt(i);
+            key.append(name).append(".");
+        }
+        key.deleteCharAt(key.lastIndexOf("."));
 
-	public String getFirstProperty(String key) {
-		List<String> value = configuration.get(key);
-		if (value == null) {
-			return null;
-		}
-		return value.get(0);
-	}
+        return key.toString();
+    }
+
+    private void addToConfiguration(String key, String value) {
+        List<String> list = configuration.get(key);
+        if (list == null) {
+            list = new ArrayList<String>();
+            list.add(value);
+            configuration.put(key, list);
+        } else {
+            if (!list.contains(value)) {
+                list.add(value);
+            }
+        }
+    }
+
+    public String getFirstProperty(String key) {
+        List<String> value = configuration.get(key);
+        if (value == null) {
+            return null;
+        }
+        return value.get(0);
+    }
 
 }
