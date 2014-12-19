@@ -135,8 +135,10 @@ public class EventPublisher {
 
     public static EventPublisher getInstance() throws StoreBAMClientException {
 
-        if (instance == null) {
-            instance = new EventPublisher();
+        synchronized (EventPublisher.class) {
+            if (instance == null) {
+                instance = new EventPublisher();
+            }
         }
         return instance;
     }
