@@ -19,74 +19,71 @@ package org.wso2.store.client;
 import com.google.code.commons.cli.annotations.CliOption;
 
 public class CliOptions {
-	
-	@CliOption(opt = "host", hasArg = true)
-	private String hostName = Constants.DEFAULT_HOST_NAME;
 
-	@CliOption(opt = "port", hasArg = true)
-	private String port = Constants.DEFAULT_PORT;
-	
-	@CliOption(opt = "user", hasArg = true)
-	private String userName = Constants.DEFAULT_USER;
-	
-	@CliOption(opt = "pwd", hasArg = true)
-	private String pwd = Constants.DEFAULT_PWD;
-	
-	@CliOption(opt = "context", hasArg = true)
-	private String context = Constants.DEFAULT_CONTEXT;
-	
-	@CliOption(opt = "location", hasArg = true)
-	private String location ;
-	
+    @CliOption(opt = "host", hasArg = true)
+    private String hostName = Constants.DEFAULT_HOST_NAME;
 
-	
+    @CliOption(opt = "port", hasArg = true)
+    private String port = Constants.DEFAULT_PORT;
 
-	public String getLocation() {
-		return location;
-	}
+    @CliOption(opt = "user", hasArg = true)
+    private String userName = Constants.DEFAULT_USER;
 
-	public void setLocation(String location) {
-		this.location = location;
-	}
+    @CliOption(opt = "pwd", hasArg = true)
+    private String pwd = Constants.DEFAULT_PWD;
 
-	public String getHostName() {
-		return hostName;
-	}
+    @CliOption(opt = "context", hasArg = true)
+    private String context = Constants.DEFAULT_CONTEXT;
 
-	public void setHostName(String hostName) {
-		this.hostName = hostName;
-	}
-	public String getPort() {
-		return port;
-	}
+    @CliOption(opt = "location", hasArg = true)
+    private String location;
 
-	public void setPort(String port) {
-		this.port = port;
-	}
+    public String getLocation() {
+        return location;
+    }
 
-	public String getUserName() {
-		return userName;
-	}
+    public void setLocation(String location) {
+        this.location = location;
+    }
 
-	public void setUserName(String userName) {
-		this.userName = userName;
-	}
+    public String getHostName() {
+        return hostName;
+    }
 
-	public String getPwd() {
-		return pwd;
-	}
+    public void setHostName(String hostName) {
+        this.hostName = hostName;
+    }
 
-	public void setPwd(String pwd) {
-		this.pwd = pwd;
-	}
+    public String getPort() {
+        return port;
+    }
 
-	public String getContext() {
-		return context;
-	}
+    public void setPort(String port) {
+        this.port = port;
+    }
 
-	public void setContext(String context) {
-		this.context = context;
-	}
+    public String getUserName() {
+        return userName;
+    }
 
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getPwd() {
+        return pwd;
+    }
+
+    public void setPwd(String pwd) {
+        this.pwd = pwd;
+    }
+
+    public String getContext() {
+        return context;
+    }
+
+    public void setContext(String context) {
+        this.context = context;
+    }
 
 }

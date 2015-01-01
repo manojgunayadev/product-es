@@ -30,6 +30,4 @@ public class Constants {
 	public static String RXT_URL = "/apis/rxt/list";
 	public static String RXT_ATTRIBUTES_FOR_GIVEN_TYPE = "/apis/rxt";
 	public static String RESOURCE_DIR_NAME = "resources";
-
-
 }

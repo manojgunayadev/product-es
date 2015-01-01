@@ -200,6 +200,7 @@
             </includes>
         </fileSet>
 
+        <!-- copy bam configuration file to configuration directory -->
         <fileSet>
             <directory>src/repository/conf/bam</directory>
             <outputDirectory>${project.artifactId}-${project.version}/repository/conf/bam</outputDirectory>
@@ -254,7 +255,8 @@
                 <include>**/social.tbox</include>
             </includes>
         </fileSet-->
-        
+
+        <!-- copy the asset upload client jar to lib directory-->
         <fileSet>
             <directory>${project.basedir}/../components/asset-client/target</directory>
             <includes>
@@ -262,7 +264,8 @@
             </includes>
             <outputDirectory>${project.artifactId}-${project.version}/lib</outputDirectory>
         </fileSet>
-        
+
+        <!-- copy the asset upload client samples to samples directory-->
         <fileSet>
            <directory>${project.basedir}/../components/asset-client/src/samples</directory>
             <includes>
@@ -447,25 +450,5 @@
         
 
        </files>
-  
-  <!-- 
-      <moduleSets>
-      
-    <moduleSet>
-    
-
-      
-      <includes>
-        <include>org.wso2.store:asset-client</include>
-      </includes>
-      <binaries>
-        <attachmentClassifier>jar-with-dependencies</attachmentClassifier>
-        <outputDirectory>${project.artifactId}-${project.version}/lib</outputDirectory>
-        <unpack>false</unpack>
-      </binaries>
-
--->
-
-
 
 </assembly>

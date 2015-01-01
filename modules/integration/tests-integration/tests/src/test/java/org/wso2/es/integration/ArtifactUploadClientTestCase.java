@@ -41,50 +41,49 @@ import java.net.URISyntaxException;
 
 public class ArtifactUploadClientTestCase extends ESIntegrationTest {
 
-	protected static final Logger log = Logger.getLogger(ArtifactUploadClientTestCase.class);
-	private String esHost;
-	private String esPort;
-	private String esUser;
-	private String esPwd;
-	private String carbonHome = "";
+    protected static final Logger log = Logger.getLogger(ArtifactUploadClientTestCase.class);
+    private String esHost;
+    private String esPort;
+    private String esUser;
+    private String esPwd;
+    private String carbonHome = "";
 
-	@BeforeClass(alwaysRun = true)
-	public void init()
-			throws XPathExpressionException, IOException, URISyntaxException, SAXException,
-			       XMLStreamException, LoginAuthenticationExceptionException {
+    @BeforeClass(alwaysRun = true)
+    public void init()
+            throws XPathExpressionException, IOException, URISyntaxException, SAXException, XMLStreamException,
+            LoginAuthenticationExceptionException {
 
-		esContext = new AutomationContext(ESIntegrationTestConstants.ES_PRODUCT_NAME,
-		                                  TestUserMode.SUPER_TENANT_ADMIN);
-		LoginLogoutClient loginLogoutClient = new LoginLogoutClient(esContext);
-		sessionCookie = loginLogoutClient.login();
-		carbonHome = System.getProperty("carbon.home");
-		esUser = esContext.getContextTenant().getContextUser().getUserName();
-		esPwd = esContext.getContextTenant().getContextUser().getPassword();
-		esHost = esContext.getDefaultInstance().getHosts().get("default");
-		esPort = esContext.getDefaultInstance().getPorts().get("https");
-	}
+        esContext = new AutomationContext(ESIntegrationTestConstants.ES_PRODUCT_NAME, TestUserMode.SUPER_TENANT_ADMIN);
+        LoginLogoutClient loginLogoutClient = new LoginLogoutClient(esContext);
+        sessionCookie = loginLogoutClient.login();
+        carbonHome = System.getProperty("carbon.home");
+        esUser = esContext.getContextTenant().getContextUser().getUserName();
+        esPwd = esContext.getContextTenant().getContextUser().getPassword();
+        esHost = esContext.getDefaultInstance().getHosts().get("default");
+        esPort = esContext.getDefaultInstance().getPorts().get("https");
+    }
 
-	@Test(groups = "wso2.es")
-	public void publisherTest() throws Exception {
+    @Test(groups = "wso2.es")
+    public void publisherTest() throws IOException{
 
-		Process proc = Runtime.getRuntime().exec("java -jar " + carbonHome +
-		                                         "/lib/asset-client-2.0.0-SNAPSHOT-jar-with-dependencies.jar -host " +
-		                                         esHost + " -port " + esPort + " -user " +
-		                                         esUser +
-		                                         " -pwd " + esPwd + " -location " + carbonHome +
-		                                         File.separator + "samples");
-		InputStream in = proc.getInputStream();
-		InputStream errorIn =     proc.getErrorStream();
+        Process proc = Runtime.getRuntime().exec("java -jar " + carbonHome +
+                "/lib/asset-client-2.0.0-SNAPSHOT-jar-with-dependencies.jar -host " +
+                esHost + " -port " + esPort + " -user " +
+                esUser +
+                " -pwd " + esPwd + " -location " + carbonHome +
+                File.separator + "samples");
+        InputStream in = proc.getInputStream();
+        InputStream errorIn = proc.getErrorStream();
 
-		StringWriter writer = new StringWriter();
-		IOUtils.copy(in, writer, "utf-8");
-		String consoleMsg = writer.toString();
+        StringWriter writer = new StringWriter();
+        IOUtils.copy(in, writer, "utf-8");
+        String consoleMsg = writer.toString();
 
-		writer = new StringWriter();
-		IOUtils.copy(errorIn, writer, "utf-8");
-		String errorString = writer.toString();
-		log.info(consoleMsg);
-		Assert.assertEquals("Assets not uploaded successfully", 0, errorString.length());
-	}
+        writer = new StringWriter();
+        IOUtils.copy(errorIn, writer, "utf-8");
+        String errorString = writer.toString();
+        log.info(consoleMsg);
+        Assert.assertEquals("Assets not uploaded successfully", 0, errorString.length());
+    }
 
 }
