@@ -1,5 +1,4 @@
 /*
-
 	* Copyright (c) 2005-2014, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
 	* WSO2 Inc. licenses this file to you under the Apache License,
 	* Version 2.0 (the "License"); you may not use this file except
@@ -13,34 +12,19 @@
 	* specific language governing permissions and limitations
 	* under the License.
 	*/
-package org.wso2.store.client;
+package org.wso2.store.client.data;
 
+public class AuthorizeData {
 
-////{"code" : 200, "message" : "Logged in successfully", "data" : {"sessionId" : "4F1A2351985E8987880A1B4465FE7D81"}}
-public class Authorize {
+	private String sessionId;
+
+	public String getSessionId() {
+		return sessionId;
+	}
+
+	public void setSessionId(String sessionId) {
+		this.sessionId = sessionId;
+	}
 	
-	private Integer code;
-	private String message;
-	private AuthorizeData data;
 	
-
-	public Integer getCode() {
-		return code;
-	}
-	public void setCode(Integer code) {
-		this.code = code;
-	}
-	public String getMessage() {
-		return message;
-	}
-	public void setMessage(String message) {
-		this.message = message;
-	}
-	public AuthorizeData getData() {
-		return data;
-	}
-	public void setData(AuthorizeData data) {
-		this.data = data;
-	}
-
 }

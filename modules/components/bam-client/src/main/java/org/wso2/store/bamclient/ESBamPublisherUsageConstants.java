@@ -16,7 +16,7 @@
  * under the License.
  */
 
-package org.wso2.store.bamclient.usage;
+package org.wso2.store.bamclient;
 
 public class ESBamPublisherUsageConstants {
 

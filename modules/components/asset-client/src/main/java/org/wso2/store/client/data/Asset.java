@@ -14,7 +14,7 @@
 	* under the License.
 	*/
 
-package org.wso2.store.client;
+package org.wso2.store.client.data;
 
 import java.util.HashMap;
 
