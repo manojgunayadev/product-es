@@ -24,7 +24,7 @@ import org.osgi.framework.BundleContext;
 
 public class Activator implements BundleActivator {
 
-	private static final Logger log = Logger.getLogger(EventPublisher.class);
+	private static final Logger LOG = Logger.getLogger(EventPublisher.class);
 
 	@Override
 	public void start(BundleContext bundleContext) throws Exception {
@@ -33,7 +33,9 @@ public class Activator implements BundleActivator {
 
 	@Override
 	public void stop(BundleContext bundleContext) {
-		log.debug("BAM client bundle shut down");
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("BAM client bundle shut down");
+        }
 		EventPublisher.shutDownPublisher();
 	}
 }
