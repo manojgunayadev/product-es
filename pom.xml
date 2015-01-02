@@ -21,7 +21,7 @@
     <groupId>org.wso2.store</groupId>
     <artifactId>wso2es-parent</artifactId>
     <packaging>pom</packaging>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>${project.es.version}</version>
     <name>WSO2 Enterprise Store</name>
     <url>http://wso2.com/products/enterprise-store</url>
     <description>WSO2 Enterprise Store</description>
@@ -208,9 +208,6 @@
                         </execution>
                     </executions>
                 </plugin>
-                
-
-         
             </plugins>
         </pluginManagement>
     </build>
@@ -553,6 +550,7 @@
         <url>http://wso2.org/jira/browse/STORE</url>
     </issueManagement>
     <properties>
+        <project.es.version>2.0.0-SNAPSHOT</project.es.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         
         <carbon.platform.version>4.3.0-SNAPSHOT</carbon.platform.version>
@@ -606,6 +604,7 @@
         <sso.hostobjects.version>1.0.1</sso.hostobjects.version>
         <httpcomponents-httpclient.wso2.version>4.1.1-wso2v1</httpcomponents-httpclient.wso2.version>
         <httpcomponents-httpcore.wso2.version>4.1.0-wso2v1</httpcomponents-httpcore.wso2.version>
+        <project.store.util.version>2.0.0-SNAPSHOT</project.store.util.version>
 
         <!--<apim.version>1.3.0-SNAPSHOT</apim.version>
         <jaggery.version>0.9.0.ALPHA5.wso2v1-SNAPSHOT</jaggery.version>
