@@ -347,21 +347,22 @@ public class ArtifactPublisher {
         BufferedReader br;
 
         for (final File file : dir.listFiles()) {
-            if (file.isFile() && file.getName().substring(file.getName().lastIndexOf(".") + 1).equals("json")) {
+            if (file.isFile()) {
+                if (file.getName().substring(file.getName().lastIndexOf(".") + 1).equals("json")) {
+                    /**
+                     * catch generic exception. if a resource file fails to extract asset details
+                     * due to incorrect JSON format or any other error continue the upload of other assets.
+                     */
+                    try {
+                        br = new BufferedReader(new FileReader(file));
+                        JsonParser parser = new JsonParser();
+                        JsonArray jsonArray = (JsonArray) parser.parse(br).getAsJsonObject().get("assets");
+                        assetArr = gson.fromJson(jsonArray, Asset[].class);
+                        uploadAssets(assetArr, dir);
 
-                /**
-                 * catch generic exception. if a resource file fails to extract asset details
-                 * due to incorrect JSON format or any other error continue the upload of other assets.
-                 */
-                try {
-                    br = new BufferedReader(new FileReader(file));
-                    JsonParser parser = new JsonParser();
-                    JsonArray jsonArray = (JsonArray) parser.parse(br).getAsJsonObject().get("assets");
-                    assetArr = gson.fromJson(jsonArray, Asset[].class);
-                    uploadAssets(assetArr, dir);
-
-                } catch (Exception ex) {
-                    LOG.error("file not completely uploaded " + file.getName());
+                    } catch (Exception ex) {
+                        LOG.error("file not completely uploaded " + file.getName());
+                    }
                 }
             }
             if (file.list() != null && file.list().length > 0) {
