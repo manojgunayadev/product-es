@@ -405,17 +405,13 @@ public class ArtifactPublisher {
 
             attrMap = asset.getAttributes();
             httppost = new HttpPost(publisherUrlBuilder.toString());
+            httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
 
             for (String attrKey : attrMap.keySet()) {
-                httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory)
-                        .build();
-
                 fileAttributes = rxtFileAttributesMap.get(asset.getType());
-
                 if (fileAttributes != null && fileAttributes.contains(attrKey)) {
-                    imageFile = new File(
-                            dir + File.separator + Constants.RESOURCE_DIR_NAME + File.separator +
-                                    attrMap.get(attrKey));
+                    imageFile = new File(dir + File.separator + Constants.RESOURCE_DIR_NAME + File.separator +
+                            attrMap.get(attrKey));
                     multiPartBuilder.addBinaryBody(attrKey, imageFile);
                 }
             }
