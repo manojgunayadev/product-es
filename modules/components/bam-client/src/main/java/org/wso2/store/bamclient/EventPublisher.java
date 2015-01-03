@@ -99,9 +99,7 @@ public class EventPublisher {
             throw new StoreBAMClientException(msg, storeConfEx);
         }
 
-        String trustStoreFilePath = CarbonUtils.getCarbonHome() + File.separator + "repository" + File.separator +
-                "resources" + File.separator + "security" + File.separator + "client-truststore.jks";
-
+        String trustStoreFilePath = ConfigurationConstants.BAM_CLIENT_STORE;
         String trustStorePwd = configuration.getFirstProperty(ConfigurationConstants.BAM_TRUST_STORE_PWD);
         String receiverUrls = configuration.getFirstProperty(ConfigurationConstants.BAM_HOST);
         Boolean failOver = Boolean.parseBoolean(configuration.getFirstProperty(ConfigurationConstants.BAM_FAILOBER));

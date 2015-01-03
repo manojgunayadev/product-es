@@ -102,7 +102,6 @@ public class Configuration {
             key.append(name).append(".");
         }
         key.deleteCharAt(key.lastIndexOf("."));
-
         return key.toString();
     }
 

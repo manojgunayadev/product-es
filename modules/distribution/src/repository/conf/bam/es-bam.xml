@@ -22,4 +22,6 @@
     <failOver>false</failOver>
     <userName>admin</userName>
     <password>admin</password>
+    <clientTrustStorePath>/opt/wso2es-1.2.0-SNAPSHOT/repository/resources/security/client-truststore
+        .jks</clientTrustStorePath>
 </bamConfiguration>
