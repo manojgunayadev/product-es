@@ -21,29 +21,16 @@ public class StoreAssetClientException extends Exception {
 
     private static final long serialVersionUID = 3022963371112034412L;
 
-    private String errorMessage;
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
     public StoreAssetClientException(String msg, Exception nestedEx) {
         super(msg, nestedEx);
-        setErrorMessage(msg);
     }
 
     public StoreAssetClientException(String message, Throwable cause) {
         super(message, cause);
-        setErrorMessage(message);
     }
 
     public StoreAssetClientException(String msg) {
         super(msg);
-        setErrorMessage(msg);
     }
 
     public StoreAssetClientException() {

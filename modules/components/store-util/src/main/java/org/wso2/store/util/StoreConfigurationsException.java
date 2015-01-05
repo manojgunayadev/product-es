@@ -21,29 +21,16 @@ public class StoreConfigurationsException extends Exception {
 
     private static final long serialVersionUID = -6781268625008335029L;
 
-    private String errorMessage;
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
     public StoreConfigurationsException(String msg, Exception nestedEx) {
         super(msg, nestedEx);
-        setErrorMessage(msg);
     }
 
     public StoreConfigurationsException(String message, Throwable cause) {
         super(message, cause);
-        setErrorMessage(message);
     }
 
     public StoreConfigurationsException(String msg) {
         super(msg);
-        setErrorMessage(msg);
     }
 
     public StoreConfigurationsException() {

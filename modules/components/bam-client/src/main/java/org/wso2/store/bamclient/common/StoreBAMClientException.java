@@ -21,29 +21,16 @@ public class StoreBAMClientException extends Exception {
 
     private static final long serialVersionUID = -6516851051711062919L;
 
-    private String errorMessage;
-
-    public String getErrorMessage() {
-        return errorMessage;
-    }
-
-    public void setErrorMessage(String errorMessage) {
-        this.errorMessage = errorMessage;
-    }
-
     public StoreBAMClientException(String msg, Exception nestedEx) {
         super(msg, nestedEx);
-        setErrorMessage(msg);
     }
 
     public StoreBAMClientException(String message, Throwable cause) {
         super(message, cause);
-        setErrorMessage(message);
     }
 
     public StoreBAMClientException(String msg) {
         super(msg);
-        setErrorMessage(msg);
     }
 
     public StoreBAMClientException() {
