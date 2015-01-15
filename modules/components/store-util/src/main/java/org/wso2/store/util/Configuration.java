@@ -17,22 +17,23 @@
  */
 package org.wso2.store.util;
 
-import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 
 public class Configuration {
 
-    private static Logger logger = Logger.getLogger(Configuration.class);
+    private static final Log log = LogFactory.getLog(Configuration.class);
     private Map<String, List<String>> configuration = new HashMap<String, List<String>>();
 
     public Configuration(InputStream xmlInputStream) throws StoreConfigurationsException {
@@ -57,18 +58,18 @@ public class Configuration {
         } catch (ParserConfigurationException parseConfigurationException) {
 
             String msg = "Parser configuration error";
-            logger.error(msg, parseConfigurationException);
-            logger.fatal(msg, parseConfigurationException);
+            log.error(msg, parseConfigurationException);
+            log.fatal(msg, parseConfigurationException);
             throw new StoreConfigurationsException("", parseConfigurationException);
         } catch (SAXException saxException) {
 
             String msg = "SAX exception occurred when passing stream";
-            logger.error(msg, saxException);
+            log.error(msg, saxException);
             throw new StoreConfigurationsException(msg, saxException);
         } catch (IOException ioException) {
 
             String msg = "IO exception occurred when passing stream";
-            logger.error(msg, ioException);
+            log.error(msg, ioException);
             throw new StoreConfigurationsException(msg, ioException);
         }
     }
@@ -96,7 +97,8 @@ public class Configuration {
     }
 
     private String getKey(Stack<String> nameStack) {
-        StringBuffer key = new StringBuffer();
+
+        StringBuilder key = new StringBuilder();
         for (int i = 0; i < nameStack.size(); i++) {
             String name = nameStack.elementAt(i);
             key.append(name).append(".");

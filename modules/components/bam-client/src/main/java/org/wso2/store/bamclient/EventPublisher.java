@@ -20,6 +20,7 @@ package org.wso2.store.bamclient;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.apache.log4j.Logger;
+import org.wso2.carbon.base.ServerConfiguration;
 import org.wso2.carbon.databridge.agent.thrift.exception.AgentException;
 import org.wso2.carbon.databridge.agent.thrift.lb.DataPublisherHolder;
 import org.wso2.carbon.databridge.agent.thrift.lb.LoadBalancingDataPublisher;
@@ -30,103 +31,103 @@ import org.wso2.store.bamclient.common.StoreBAMClientException;
 import org.wso2.store.util.Configuration;
 import org.wso2.store.util.ConfigurationConstants;
 import org.wso2.store.util.StoreConfigurationsException;
+
 import java.io.*;
 import java.util.ArrayList;
 
 /**
  * Publish ES events to BAM.
- * Enables publish data to single or multiple BAM nodes in a cluster in load balanced manner.
+ * Publish data to single or multiple BAM nodes in a cluster in load balanced manner.
  * Multiple BAM nodes can be configure in es-bam.xml.
  * Provides default stream definition.
- * Client can send custom stream definition, meta data and data to publish.
+ * Creates custom stream definition for ES.
  */
 public class EventPublisher {
 
-    private static final Logger LOG = Logger.getLogger(EventPublisher.class);
+    private static final Logger log = Logger.getLogger(EventPublisher.class);
     private static EventPublisher instance = null;
     private static String assetStatisticsDefaultStream;
-    private static LoadBalancingDataPublisher loadBalancingDataPublisher = null;
-    private static final String BAMCONFIGDIRECTORY = "bam";
-    private static final String ESBAMCONFIGFILENAME = "es-bam.xml";
+    private static LoadBalancingDataPublisher loadBalancingDataPublisher;
+    private static final String BAM_CONFIG_DIR = "bam";
+    private static final String ES_BAM_CONFIG_FILE_NAME = "es-bam.xml";
 
     /**
-     * Reads BAM node configurations from es-bam.xml file stored in ES conf directory.
-     * Initialize receiver groups according to receiver urls define in the es-bam.xml
-     * receiver urls can be configure as comma separated urls.
+     * Reads BAM nodes configurations from es-bam.xml file stored in ES conf directory.
+     * Initialize receiver groups according to receiver urls define in the es-bam.xml.
+     * Receiver urls can be configure as comma separated urls.
      * Initialize Load balancing data publisher with receiver urls.
      * @throws StoreBAMClientException
      */
     private EventPublisher() throws StoreBAMClientException {
 
         InputStream inputStream = null;
-
-        // TODO: This default stream definition should move to a JSON configuration file
+        // TODO: This default stream definition should move to a configuration file
         assetStatisticsDefaultStream = "{\"name\":" + ESBamPublisherUsageConstants.ES_STATISTICS_STREAM_NAME +
                 "\"version\":" + ESBamPublisherUsageConstants.ES_STATISTICS_STREAM_VERSION + "," +
                 "\"nickName\":\"asseteventsStream\",\"description\":\"assets events stream\"" + "," +
                 "\"metaData\":[{\"name\":\"clientType\",\"type\":\"STRING\"}]," +
-                "" + "\"payloadData\":[{\"name\":\"userstore\",\"type\":\"STRING\"},{\"name\":\"tenant\"," +
-                "" + "\"type\":\"STRING\"},{\"name\":\"user\",\"type\":\"STRING\"},{\"name\":\"event\"," +
-                "" + "\"type\":\"STRING\"},{\"name\":\"assetId\",\"type\":\"STRING\"},{\"name\":\"assetType\"," +
-                "" + "\"type\":\"STRING\"},{\"name\":\"description\",\"type\":\"STRING\"}]}";
+                "\"payloadData\":[{\"name\":\"userstore\",\"type\":\"STRING\"},{\"name\":\"tenant\"," +
+                "\"type\":\"STRING\"},{\"name\":\"user\",\"type\":\"STRING\"},{\"name\":\"event\"," +
+                "\"type\":\"STRING\"},{\"name\":\"assetId\",\"type\":\"STRING\"},{\"name\":\"assetType\"," +
+                "\"type\":\"STRING\"},{\"name\":\"description\",\"type\":\"STRING\"}]}";
 
         String carbonConfigDirPath = CarbonUtils.getCarbonConfigDirPath();
+        Configuration configuration;
 
         try {
-            inputStream = new FileInputStream(new File(carbonConfigDirPath + File.separator + BAMCONFIGDIRECTORY +
-                    File.separator + ESBAMCONFIGFILENAME));
-
-
-        } catch (FileNotFoundException fileNotFoundException) {
-            String msg = "bam conf file not found";
-            LOG.error(msg, fileNotFoundException);
-            throw new StoreBAMClientException(msg, fileNotFoundException);
-        } finally {
-            try {
-                inputStream.close();
-            } catch (IOException e) {
-            }
-        }
-        Configuration configuration = null;
-
-        try {
+            inputStream = new FileInputStream(new File(carbonConfigDirPath + File.separator + BAM_CONFIG_DIR +
+                    File.separator + ES_BAM_CONFIG_FILE_NAME));
             configuration = new Configuration(inputStream);
 
+        } catch (FileNotFoundException fileNotFoundException) {
+            String msg = "BAM conf file not found";
+            log.error(msg, fileNotFoundException);
+            throw new StoreBAMClientException(msg, fileNotFoundException);
         } catch (StoreConfigurationsException storeConfEx) {
-            String msg = "Bam configuration error";
-            LOG.error(msg, storeConfEx);
+            String msg = "BAM configuration error";
+            log.error(msg, storeConfEx);
             throw new StoreBAMClientException(msg, storeConfEx);
+        } finally {
+            try {
+                if (inputStream != null) {
+                    inputStream.close();
+                }
+            } catch (IOException e) {
+                log.error(e);
+            }
         }
 
-        String trustStoreFilePath = ConfigurationConstants.BAM_CLIENT_STORE;
-        String trustStorePwd = configuration.getFirstProperty(ConfigurationConstants.BAM_TRUST_STORE_PWD);
+        ServerConfiguration serverConfiguration = CarbonUtils.getServerConfiguration();
+        String trustStoreFilePath = serverConfiguration.getFirstProperty("Security.TrustStore.Location");
+        String trustStorePwd = serverConfiguration.getFirstProperty("Security.TrustStore.Password");
+
         String receiverUrls = configuration.getFirstProperty(ConfigurationConstants.BAM_HOST);
         Boolean failOver = Boolean.parseBoolean(configuration.getFirstProperty(ConfigurationConstants.BAM_FAILOBER));
-
         String userName = configuration.getFirstProperty(ConfigurationConstants.BAM_USERNAME);
         String password = configuration.getFirstProperty(ConfigurationConstants.BAM_PWD);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("trust store file Path:" + trustStoreFilePath);
+        if (log.isDebugEnabled()) {
+            log.debug("Trust store file Path:" + trustStoreFilePath);
         }
 
         System.setProperty("javax.net.ssl.trustStore", trustStoreFilePath);
         System.setProperty("javax.net.ssl.trustStorePassword", trustStorePwd);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("receiver urls: " + receiverUrls);
+        if (log.isDebugEnabled()) {
+            log.debug("Receiver urls: " + receiverUrls);
         }
 
         ArrayList<ReceiverGroup> allReceiverGroups = new ArrayList<ReceiverGroup>();
         ArrayList<String> receiverGroupUrls = DataPublisherUtil.getReceiverGroups(receiverUrls);
 
         for (String aReceiverGroupURL : receiverGroupUrls) {
+
             ArrayList<DataPublisherHolder> dataPublisherHolders = new ArrayList<DataPublisherHolder>();
             String[] urls = aReceiverGroupURL.split(",");
 
             for (String receiverUrl : urls) {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("aUrl:" + receiverUrl);
+                if (log.isDebugEnabled()) {
+                    log.debug("Receiver url:" + receiverUrl);
                 }
                 //set null to authentication url
                 DataPublisherHolder aNode = new DataPublisherHolder(null, receiverUrl.trim(), userName, password);
@@ -170,27 +171,26 @@ public class EventPublisher {
     public void publishEvents(String streamName, String streamVersion, String streamDefinition,
             String metaData, String data) throws StoreBAMClientException {
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("streamName:" + streamName);
-            LOG.debug("streamVersion:" + streamVersion);
-            LOG.debug("streamDefinition:" + streamDefinition);
-            LOG.debug("metaData:" + metaData);
-            LOG.debug("data:" + data);
+        if (log.isDebugEnabled()) {
+            log.debug("Stream Name:" + streamName);
+            log.debug("Stream Version:" + streamVersion);
+            log.debug("Stream Definition:" + streamDefinition);
+            log.debug("Meta Data:" + metaData);
+            log.debug("Data:" + data);
         }
         if (!loadBalancingDataPublisher.isStreamDefinitionAdded(streamName, streamVersion)) {
             loadBalancingDataPublisher.addStreamDefinition(streamDefinition, streamName, streamVersion);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("stream created:" + streamName);
+            if (log.isDebugEnabled()) {
+                log.debug("Stream created:" + streamName);
             }
         }
         try {
             loadBalancingDataPublisher.publish(streamName, streamVersion, System.currentTimeMillis(), null,
                     new Object[] { "es" }, data.split(","));
         } catch (AgentException e) {
-            LOG.error("data publish error", e);
-            throw new StoreBAMClientException("data publish error", e);
+            log.error("Data publish error", e);
+            throw new StoreBAMClientException("Data publish error", e);
         }
-
     }
 
     /**
@@ -215,8 +215,8 @@ public class EventPublisher {
         JsonObject streamDefinition = (JsonObject) parser.parse(assetStatisticsDefaultStream);
         String strData = userStore + "," + tenantId + "," + username + "," + eventName + "," + assetUUID + ","
                 + assetType + "," + description;
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("asset statistics publish data:" + strData);
+        if (log.isDebugEnabled()) {
+            log.debug("asset statistics publish data:" + strData);
         }
         publishEvents(ESBamPublisherUsageConstants.ES_STATISTICS_STREAM_NAME,
                 ESBamPublisherUsageConstants.ES_STATISTICS_STREAM_VERSION, assetStatisticsDefaultStream,

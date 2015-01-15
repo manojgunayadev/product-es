@@ -19,15 +19,14 @@ package org.wso2.store.client.data;
 
 public class AuthorizeData {
 
-	private String sessionId;
+    private String sessionId;
 
-	public String getSessionId() {
-		return sessionId;
-	}
+    public String getSessionId() {
+        return sessionId;
+    }
 
-	public void setSessionId(String sessionId) {
-		this.sessionId = sessionId;
-	}
-	
-	
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+
 }

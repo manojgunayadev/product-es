@@ -17,13 +17,10 @@
  */
 package org.wso2.store.client;
 
-import com.google.code.commons.cli.annotations.CliParser;
-import com.google.code.commons.cli.annotations.ParserException;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
-import org.apache.commons.cli.BasicParser;
-import org.apache.http.client.ClientProtocolException;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -34,160 +31,106 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.BasicHttpContext;
-import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.wso2.store.client.common.StoreAssetClientException;
 import org.wso2.store.client.data.Asset;
 import org.wso2.store.client.data.AuthenticationData;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 /**
- * Use as a command line tool to upload artifacts to ES.
- * ES configurations read as command line arguments and if not present
- * set default settings.
- * The artifact details read as JSON format.
- * Reads folder structure under the samples directory and upload artifacts.
- * physical files related to artifacts also upload.
+ * Upload assets store in a file system to ES.
+ * The asset details should be related to rxt type fields and read as JSON format.
  */
 public class ArtifactPublisher {
 
-    private static final Logger LOG = Logger.getLogger(ArtifactPublisher.class);
-
-    private static CloseableHttpClient httpClient;
-    private static HttpPost httppost;
-    private static HttpGet httpGet;
-    private static CloseableHttpResponse response;
-    private static SSLConnectionSocketFactory sslConnectionSocketFactory;
-    private static HttpContext httpContext;
-
-    private static HashMap<String, List<String>> rxtFileAttributesMap;
-    private static String hostName;
-    private static String port;
-
-    private static String sessionId;
-    private static String context;
-
-    private static Gson gson;
+    private static final Logger log = Logger.getLogger(ArtifactPublisher.class);
+    private HashMap<String, List<String>> rxtFileAttributesMap;
+    private String hostUrl;
+    private String sessionId;
+    private SSLConnectionSocketFactory sslConnectionSocketFactory;
+    private BasicHttpContext httpContext;
+    private Gson gson;
 
     /**
-     * Parse the command line arguments and set ES host settings.
-     * Login using user credentials given as command line arguments.
-     * Get all rxt types supported by ES.
-     * Get "file" type attributes for each rxt type.
-     * Read folder structure under the current directory.
-     * @param args Command Line arguments parameter.
+     * Publish asset details to given ES host.
+     *
+     * @param host ES Host Name
+     * @param context Context
+     * @param port ES Port
+     * @param userName ES User name
+     * @param pwd ES pwd
+     * @param location Directory of asset details stored
      * @throws StoreAssetClientException
      */
-    public static void main(String args[]) throws StoreAssetClientException {
-
-        CliParser parser = new CliParser(new BasicParser());
-        CliOptions cliOptions;
-
-        String userName;
-        String pwd;
-        String location;
-
-        try {
-            cliOptions = parser.parse(CliOptions.class, args);
-
-        } catch (ParserException parseException) {
-            String errorMsg = "command line arguments parsing error";
-            LOG.error(errorMsg, parseException);
-            throw new StoreAssetClientException(errorMsg, parseException);
-        }
-
-        hostName = cliOptions.getHostName();
-        port = cliOptions.getPort();
-        userName = cliOptions.getUserName();
-        pwd = cliOptions.getPwd();
-        context = cliOptions.getContext();
-        location = cliOptions.getLocation();
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("hostName:" + hostName + " port:" + port + " userName:" + userName + " pwd:" + pwd + " context:"
-                    + context + " " +
-                    "location:" + location);
-        }
-
-        File samplesDirectory = new File(location);
-
-        /**
-         * following code block throws various security related exceptions.
-         * Catch each and every exception is not useful.Catch generic exception and throw to the caller.
-         */
-        try {
-            SSLContextBuilder builder = new SSLContextBuilder();
-            builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
-            sslConnectionSocketFactory = new SSLConnectionSocketFactory(builder.build());
-
-        } catch (Exception ex) {
-            String errorMsg = "ssl connection builder error";
-            LOG.error(errorMsg, ex);
-            throw new StoreAssetClientException(errorMsg, ex);
-        }
+    public void publishArtifacts(String host, String context, String port, String userName, String pwd, String location)
+            throws StoreAssetClientException {
 
         init();
-        sessionId = getSession(sslConnectionSocketFactory, hostName, port, userName, pwd);
-
+        hostUrl = "https:" + host + port + context;
+        sessionId = getSession(userName, pwd);
         String[] rxtArr = getRxtTypes();
-        rxtFileAttributesMap = new HashMap<String, List<String>>();
 
         for (String rxtType : rxtArr) {
             rxtFileAttributesMap.put(rxtType, getAttributesForType(rxtType, "file"));
         }
+        if (location == null || location.length() == 0) {
+            String errorMsg = "The resource location should not be empty";
+            log.error(errorMsg);
+            throw new StoreAssetClientException(errorMsg);
+        }
+        File samplesDirectory = new File(location);
         readAssets(samplesDirectory);
     }
 
-    private static void init() {
+    /**
+     * Initialize resources
+     * @throws StoreAssetClientException
+     */
+    private void init() throws StoreAssetClientException {
+
         httpContext = new BasicHttpContext();
+        rxtFileAttributesMap = new HashMap<String, List<String>>();
+        SSLContextBuilder builder = new SSLContextBuilder();
+        try {
+            builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
+            sslConnectionSocketFactory = new SSLConnectionSocketFactory(builder.build());
+        } catch (GeneralSecurityException genSecEx) {
+            String errorMsg = "SSL initiation fail.general security exception";
+            throw new StoreAssetClientException(errorMsg, genSecEx);
+        }
         gson = new Gson();
     }
 
     /**
-     * Connect to authentication url and authenticate user credentials.
+     * Authenticate user name with password and fetch a valid session.
      *
-     * @param sslsf SSL connection factory
-     * @param hostName Host Name
-     * @param port port
-     * @param userName user name
-     * @param pwd password
-     * @return session id
+     * @param userName ES User name
+     * @param pwd    ES password
+     * @return Session id
      * @throws StoreAssetClientException
      */
-    private static String getSession(SSLConnectionSocketFactory sslsf, String hostName, String port, String userName,
-            String pwd) throws StoreAssetClientException {
+    private String getSession(String userName, String pwd) throws StoreAssetClientException {
 
-        String authUrl = "https://" + hostName + ":" + port + "/" + context + Constants.PUBLISHER_AUTHORIZATION_URL +
-                "?username=" + userName + "&password=" + pwd;
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("log in url:" + authUrl);
+        String authUrl = hostUrl + Constants.PUBLISHER_AUTHORIZATION_URL + "?username=" + userName + "&password=" + pwd;
+        if (log.isDebugEnabled()) {
+            log.debug("log in url:" + authUrl);
         }
 
-        httppost = new HttpPost(authUrl);
-        httpClient = HttpClients.custom().setSSLSocketFactory(sslsf).build();
-
-        String sessionId = "";
-        response = null;
+        HttpPost httppost = new HttpPost(authUrl);
+        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+        CloseableHttpResponse response;
 
         try {
             response = httpClient.execute(httppost, httpContext);
-
-        } catch (ClientProtocolException clientProtocolException) {
-            String errorMsg = "client protocol exception in login " + authUrl;
-            LOG.error(errorMsg, clientProtocolException);
-            throw new StoreAssetClientException(errorMsg + authUrl, clientProtocolException);
         } catch (IOException ioException) {
-            String errorMsg = "io error in login" + authUrl;
-            LOG.error(errorMsg, ioException);
+            String errorMsg = "IO error in session fetch: " + authUrl;
+            log.error(errorMsg, ioException);
             throw new StoreAssetClientException(errorMsg, ioException);
         }
 
@@ -197,25 +140,31 @@ public class ArtifactPublisher {
 
             if (authorizeObj.getData() != null) {
                 sessionId = authorizeObj.getData().getSessionId();
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Logged:" + sessionId);
+                if (log.isDebugEnabled()) {
+                    log.debug("Logged:" + sessionId);
                 }
             } else {
-                LOG.info("login failure!!!" + responseJson);
+                log.info("Login failure!!!" + responseJson);
             }
-
             return sessionId;
-
         } catch (IOException ioException) {
-            String msg = "io error in decode response of login";
-            LOG.error(msg, ioException);
+            String msg = "IO error in decode response of login";
+            log.error(msg, ioException);
             throw new StoreAssetClientException(msg, ioException);
-
         } finally {
             try {
-                httpClient.close();
+                if (response != null) {
+                    response.close();
+                }
             } catch (IOException ioEx) {
-                LOG.error(ioEx);
+                log.error(ioEx);
+            }
+            try {
+                if (httpClient != null) {
+                    httpClient.close();
+                }
+            } catch (IOException ioEx) {
+                log.error(ioEx);
             }
         }
     }
@@ -226,51 +175,46 @@ public class ArtifactPublisher {
      * @return String array
      * @throws StoreAssetClientException
      */
-    private static String[] getRxtTypes() throws StoreAssetClientException {
+    private String[] getRxtTypes() throws StoreAssetClientException {
 
-        String apiUrl = "https://" + hostName + ":" + port + "/" + context + Constants.RXT_URL;
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("apiUrl:" + apiUrl);
+        String apiUrl = hostUrl + Constants.RXT_URL;
+        if (log.isDebugEnabled()) {
+            log.debug("API Url:" + apiUrl);
         }
 
-        httpGet = new HttpGet(apiUrl);
-        httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
-        response = null;
+        HttpGet httpGet = new HttpGet(apiUrl);
+        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+        CloseableHttpResponse response = null;
+        String responseJson = null;
+        String[] arrRxt;
 
         try {
             response = httpClient.execute(httpGet, httpContext);
-
-        } catch (ClientProtocolException clientProtocolException) {
-            String errorMsg = "client protocol exception connecting to RXT API:" + apiUrl;
-            LOG.error(errorMsg, clientProtocolException);
-            throw new StoreAssetClientException(errorMsg, clientProtocolException);
-
-        } catch (IOException ioException) {
-            String errorMsg = "error connecting RXT API:" + apiUrl;
-            LOG.error(errorMsg, ioException);
-            throw new StoreAssetClientException(errorMsg, ioException);
-        }
-
-        String responseJson = null;
-        String[] arrRxt = null;
-
-        try {
             responseJson = EntityUtils.toString(response.getEntity());
-            arrRxt = gson.fromJson(responseJson, String[].class);
-
-        } catch (Exception ioException) {
-            String errorMsg = "io error decoding response:" + responseJson;
-            LOG.error(errorMsg, ioException);
+        } catch (IOException ioException) {
+            String errorMsg = "Error in getting RXT types allow for ES";
+            log.error(errorMsg, ioException);
             throw new StoreAssetClientException(errorMsg, ioException);
-
         } finally {
             try {
-                httpClient.close();
+                if (response != null) {
+                    response.close();
+                }
             } catch (IOException e) {
-                LOG.error(e);
+                log.error(e);
+            }
+            try {
+                if (httpClient != null) {
+                    httpClient.close();
+                }
+            } catch (IOException e) {
+                log.error(e);
             }
         }
+        if (log.isDebugEnabled()) {
+            log.debug("RXT types:" + responseJson);
+        }
+        arrRxt = gson.fromJson(responseJson, String[].class);
         return arrRxt;
     }
 
@@ -283,52 +227,48 @@ public class ArtifactPublisher {
      * @return List of rxt attributes which related to passed type
      * @throws StoreAssetClientException
      */
-    private static List<String> getAttributesForType(String rxtType, String type) throws StoreAssetClientException {
+    private List<String> getAttributesForType(String rxtType, String type) throws StoreAssetClientException {
 
-        String apiUrl = "https://" + hostName + ":" + port + "/" + context + Constants.RXT_ATTRIBUTES_FOR_GIVEN_TYPE
-                + "/" + rxtType + "/" + type;
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("apiUrl:" + apiUrl);
+        String apiUrl = hostUrl + Constants.RXT_ATTRIBUTES_FOR_GIVEN_TYPE + "/" + rxtType + "/" + type;
+        if (log.isDebugEnabled()) {
+            log.debug("RXT Type:" + rxtType);
+            log.debug("type:" + type);
+            log.debug("API Url:" + apiUrl);
         }
 
-        httpGet = new HttpGet(apiUrl);
-        httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
-
-        response = null;
-
-        try {
-            response = httpClient.execute(httpGet, httpContext);
-
-        } catch (ClientProtocolException clientProtocolException) {
-            String errorMsg = "client protocol error in get RXT attributes for rxt type:" + apiUrl;
-            LOG.error(errorMsg, clientProtocolException);
-            throw new StoreAssetClientException(errorMsg, clientProtocolException);
-
-        } catch (IOException ioException) {
-            String errorMsg = "io error in get RXT attributes for rxt type:" + apiUrl;
-            LOG.error(errorMsg, ioException);
-            throw new StoreAssetClientException(errorMsg, ioException);
-        }
-
-        String responseJson;
+        HttpGet httpGet = new HttpGet(apiUrl);
+        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+        CloseableHttpResponse response = null;
+        String responseJson = null;
         String[] attrArr;
 
         try {
+            response = httpClient.execute(httpGet, httpContext);
             responseJson = EntityUtils.toString(response.getEntity());
-            attrArr = gson.fromJson(responseJson, String[].class);
-
-        } catch (Exception ioException) {
-            String errorMsg = "io error in response json get RXT attributes for rxt type:" + apiUrl;
-            LOG.error(errorMsg, ioException);
+        } catch (IOException ioException) {
+            String errorMsg = "Error in get RXT attributes for rxt type";
+            log.error(errorMsg, ioException);
             throw new StoreAssetClientException(errorMsg, ioException);
-
         } finally {
             try {
-                httpClient.close();
+                if (response != null) {
+                    response.close();
+                }
             } catch (IOException e) {
-                LOG.error(e);
+                log.error(e);
             }
+            try {
+                if (httpClient != null) {
+                    httpClient.close();
+                }
+            } catch (IOException e) {
+                log.error(e);
+            }
+
+        }
+        attrArr = gson.fromJson(responseJson, String[].class);
+        if (log.isDebugEnabled()) {
+            log.debug("Attributes for RXT type:" + responseJson);
         }
         return Arrays.asList(attrArr);
     }
@@ -341,27 +281,23 @@ public class ArtifactPublisher {
      *
      * @param dir resources directory
      */
-    private static void readAssets(File dir) {
+
+    private void readAssets(File dir) {
 
         Asset[] assetArr;
         BufferedReader br;
 
         for (final File file : dir.listFiles()) {
             if (file.isFile()) {
-                if (file.getName().substring(file.getName().lastIndexOf(".") + 1).equals("json")) {
-                    /**
-                     * catch generic exception. if a resource file fails to extract asset details
-                     * due to incorrect JSON format or any other error continue the upload of other assets.
-                     */
+                if (file.getName().substring(file.getName().lastIndexOf(".") + 1).equals("asset")) {
                     try {
                         br = new BufferedReader(new FileReader(file));
                         JsonParser parser = new JsonParser();
                         JsonArray jsonArray = (JsonArray) parser.parse(br).getAsJsonObject().get("assets");
                         assetArr = gson.fromJson(jsonArray, Asset[].class);
                         uploadAssets(assetArr, dir);
-
-                    } catch (Exception ex) {
-                        LOG.error("file not completely uploaded " + file.getName());
+                    } catch (FileNotFoundException ex) {
+                        log.error("file not found " + file.getName());
                     }
                 }
             }
@@ -380,7 +316,7 @@ public class ArtifactPublisher {
      * @param assetArr Array of assets
      * @param dir resource files directory
      */
-    private static void uploadAssets(Asset[] assetArr, File dir) {
+    private void uploadAssets(Asset[] assetArr, File dir) {
 
         HashMap<String, String> attrMap;
         MultipartEntityBuilder multiPartBuilder;
@@ -390,7 +326,10 @@ public class ArtifactPublisher {
         String responseJson;
         StringBuilder publisherUrlBuilder;
 
-        String uploadUrl = "https://" + hostName + ":" + port + "/" + context + Constants.PUBLISHER_URL + "/";
+        String uploadUrl = hostUrl + Constants.PUBLISHER_URL + "/";
+        HttpPost httppost;
+        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+        CloseableHttpResponse response = null;
 
         for (Asset asset : assetArr) {
             publisherUrlBuilder = new StringBuilder();
@@ -405,7 +344,6 @@ public class ArtifactPublisher {
 
             attrMap = asset.getAttributes();
             httppost = new HttpPost(publisherUrlBuilder.toString());
-            httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
 
             for (String attrKey : attrMap.keySet()) {
                 fileAttributes = rxtFileAttributesMap.get(asset.getType());
@@ -416,27 +354,32 @@ public class ArtifactPublisher {
                 }
             }
             httppost.setEntity(multiPartBuilder.build());
-            /**
-             * catch generic exception.
-             * exceptions can be thrown by httpclient and json reading due to wrong json format of artifacts or ES
-             * host down.
-             * Not useful to throw those errors to caller. Log the error.
-             */
             try {
                 response = httpClient.execute(httppost, httpContext);
-                responseJson = EntityUtils.toString(response.getEntity());
-                LOG.info(responseJson);
-            } catch (Exception ex) {
-                LOG.error(asset);
-                LOG.error("error in asset Upload", ex);
-            } finally {
-                try {
-                    httpClient.close();
-                } catch (IOException e) {
+                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                    log.info("asset " + asset.getName() + " uploaded successfully");
+                } else {
+                    responseJson = EntityUtils.toString(response.getEntity());
+                    log.info("asset " + asset.getName() + " not uploaded successfully " + responseJson);
                 }
+            } catch (IOException ex) {
+                log.error(asset);
+                log.error("error in asset Upload", ex);
             }
-
+        }
+        try {
+            if (response != null) {
+                response.close();
+            }
+        } catch (IOException e) {
+            log.error(e);
+        }
+        try {
+            if (httpClient != null) {
+                httpClient.close();
+            }
+        } catch (IOException e) {
+            log.error(e);
         }
     }
-
 }
