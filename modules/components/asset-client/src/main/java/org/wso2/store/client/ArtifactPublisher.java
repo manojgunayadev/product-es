@@ -76,9 +76,13 @@ public class ArtifactPublisher {
         hostUrl = "https://" + host + ":" + port + "/" + context;
         sessionId = getSession(userName, pwd);
         String[] rxtArr = getRxtTypes();
+        List<String> fileTypeAttributesList = null;
 
         for (String rxtType : rxtArr) {
-            rxtFileAttributesMap.put(rxtType, getAttributesForType(rxtType, "file"));
+            fileTypeAttributesList = getAttributesForType(rxtType, "file");
+            if (fileTypeAttributesList!=null && !fileTypeAttributesList.isEmpty()) {
+                rxtFileAttributesMap.put(rxtType, getAttributesForType(rxtType, "file"));
+            }
         }
         if (location == null || location.length() == 0) {
             String errorMsg = "The resource location should not be empty";

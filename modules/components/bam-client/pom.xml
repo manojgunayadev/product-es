@@ -51,7 +51,7 @@
                             org.wso2.store.bamclient.*;
                         </Export-Package>
                         <Import-Package>
-                            com.google.gson.*,org.apache.commons.logging
+                            com.google.gson.*,org.apache.commons.logging,org.wso2.store.util.*
                         </Import-Package>
 
                         <DynamicImport-Package>*</DynamicImport-Package>
