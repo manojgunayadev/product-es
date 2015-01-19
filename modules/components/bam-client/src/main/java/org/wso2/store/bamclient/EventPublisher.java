@@ -196,7 +196,6 @@ public class EventPublisher {
     /**
      * This method is use to publish asset statistics to BAM
      * Publish to default stream.
-     *
      * @param eventName event name Ex -: add gadget, edit ebook
      * @param tenantId  Tenant Id
      * @param userStore user store name

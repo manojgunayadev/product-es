@@ -60,7 +60,6 @@ public class ArtifactPublisher {
 
     /**
      * Publish asset details to given ES host.
-     *
      * @param host ES Host Name
      * @param context Context
      * @param port ES Port
@@ -114,7 +113,6 @@ public class ArtifactPublisher {
 
     /**
      * Authenticate user name with password and fetch a valid session.
-     *
      * @param userName ES User name
      * @param pwd    ES password
      * @return Session id
@@ -287,10 +285,8 @@ public class ArtifactPublisher {
      * If json file found, read and unmarshalling asset details into array.
      * File can contains multiple asset details as an array.
      * Call upload asset method.
-     *
      * @param dir resources directory
      */
-
     private void readAssets(File dir) {
 
         Asset[] assetArr;
@@ -324,8 +320,6 @@ public class ArtifactPublisher {
      * upload assets to ES
      * POST asset details to asset upload REST API
      * If attribute is a physical file seek a file in a resources directory and upload as multipart attachment.
-     *
-     *
      * @param assetArr Array of assets
      * @param dir resource files directory
      */
