@@ -44,6 +44,8 @@
                 <exclude>**/org.wso2.carbon.identity.relyingparty.ui-3.1.0.SNAPSHOT.jar</exclude>
                 <exclude>**/org.wso2.carbon.identity.user.registration.ui-3.1.0.SNAPSHOT.jar</exclude>
                 <exclude>**/log4j.properties</exclude>
+                <exclude>**/email/email-admin-config.xml</exclude>
+                <exclude>**/claim-config.xml</exclude>
             </excludes>
         </fileSet>
         <fileSet>
@@ -63,7 +65,8 @@
         </fileSet>
 
         <fileSet>
-            <directory>../p2-profile-gen/target/wso2carbon-core-${carbon.kernel.version}/repository/resources</directory>
+            <directory>../p2-profile-gen/target/wso2carbon-core-${carbon.kernel.version}/repository/resources
+            </directory>
             <outputDirectory>${project.artifactId}-${project.version}/repository/resources</outputDirectory>
         </fileSet>
 
@@ -238,7 +241,7 @@
                 <include>**/**</include>
             </includes>
         </fileSet>
-        
+
         <!--fileSet>
             <directory>../p2-profile-gen/target/WSO2-CARBON-PATCH-4.2.0-0001</directory>
             <outputDirectory>${project.artifactId}-${project.version}/repository/components/patches/</outputDirectory>
@@ -267,21 +270,21 @@
 
         <!-- copy the asset upload client samples to samples directory-->
         <fileSet>
-           <directory>${project.basedir}/../components/asset-client/src/samples</directory>
+            <directory>${project.basedir}/../components/asset-client/src/samples</directory>
             <includes>
                 <include>build.xml</include>
                 <include>*.txt</include>
                 <include>sample-gadgets*/*/*</include>
                 <include>sample-gadgets/*.json</include>
             </includes>
-           <outputDirectory>${project.artifactId}-${project.version}/samples</outputDirectory>
-       </fileSet>
+            <outputDirectory>${project.artifactId}-${project.version}/samples</outputDirectory>
+        </fileSet>
 
-       <fileSet>
-        <directory>../p2-profile-gen/target/wso2carbon-core-${carbon.kernel.version}/repository/samples</directory>
-        <outputDirectory>${project.artifactId}-${project.version}/samples</outputDirectory>
-       </fileSet>
-        
+        <fileSet>
+            <directory>../p2-profile-gen/target/wso2carbon-core-${carbon.kernel.version}/repository/samples</directory>
+            <outputDirectory>${project.artifactId}-${project.version}/samples</outputDirectory>
+        </fileSet>
+
     </fileSets>
     <dependencySets>
         <!--        <dependencySet>
@@ -305,8 +308,8 @@
                 <include>org.apache.rampart:rampart:mar</include>
             </includes>
         </dependencySet>
-        
-		
+
+
     </dependencySets>
     <files>
         <file>
@@ -316,10 +319,6 @@
             <filtered>true</filtered>
             <fileMode>644</fileMode>
         </file>
-
-
-
-        
         <file>
             <source>INSTALL.txt</source>
             <outputDirectory>${project.artifactId}-${project.version}</outputDirectory>
@@ -425,6 +424,30 @@
             <fileMode>644</fileMode>
         </file>
         <file>
+            <source>
+                ../p2-profile-gen/target/wso2carbon-core-${carbon.kernel.version}/repository/conf/security/identity-mgt.properties
+            </source>
+            <outputDirectory>${project.artifactId}-${project.version}/repository/conf/security</outputDirectory>
+            <filtered>true</filtered>
+            <fileMode>644</fileMode>
+        </file>
+        <file>
+            <source>
+                ../p2-profile-gen/target/wso2carbon-core-${carbon.kernel.version}/repository/conf/email/email-admin-config.xml
+            </source>
+            <outputDirectory>${project.artifactId}-${project.version}/repository/conf/email</outputDirectory>
+            <filtered>true</filtered>
+            <fileMode>644</fileMode>
+        </file>
+        <file>
+            <source>
+                ../p2-profile-gen/target/wso2carbon-core-${carbon.kernel.version}/repository/conf/claim-config.xml
+            </source>
+            <outputDirectory>${project.artifactId}-${project.version}/repository/conf</outputDirectory>
+            <filtered>true</filtered>
+            <fileMode>644</fileMode>
+        </file>
+        <file>
             <source>src/repository/database/WSO2IDENTITY_DB.h2.db</source>
             <outputDirectory>${project.artifactId}-${project.version}/repository/database</outputDirectory>
             <fileMode>644</fileMode>
@@ -434,21 +457,6 @@
             <outputDirectory>${project.artifactId}-${project.version}/repository/database</outputDirectory>
             <fileMode>644</fileMode>
         </file>
-        
-        
-
-        <!--        <file>
-            <source>conf/wso2is-user-certs.jks</source>
-            <outputDirectory>${project.artifactId}-${project.version}/repository/resources/security/</outputDirectory>
-            <fileMode>644</fileMode>
-        </file>-->
-        <!--       <file>
-            <source>conf/userRP.jks</source>
-            <outputDirectory>${project.artifactId}-${project.version}/repository/resources/security/</outputDirectory>
-            <fileMode>644</fileMode>
-        </file>-->
-        
-
-       </files>
+    </files>
 
 </assembly>
