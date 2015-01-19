@@ -176,7 +176,7 @@ public class ArtifactPublisher {
     }
 
     /**
-     * fetch all rxt types supported by ES.
+     * Fetch all rxt types supported by ES.
      * ex -: ebook, gadgets.
      * @return String array
      * @throws StoreAssetClientException
@@ -317,7 +317,7 @@ public class ArtifactPublisher {
     }
 
     /**
-     * upload assets to ES
+     * Upload assets to ES
      * POST asset details to asset upload REST API
      * If attribute is a physical file seek a file in a resources directory and upload as multipart attachment.
      * @param assetArr Array of assets
