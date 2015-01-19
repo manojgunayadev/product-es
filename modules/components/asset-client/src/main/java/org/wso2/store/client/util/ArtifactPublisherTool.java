@@ -16,19 +16,20 @@ package org.wso2.store.client.util;
  * specific language governing permissions and limitations
  * under the License.
  */
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.log4j.Logger;
 import org.wso2.store.client.ArtifactPublisher;
-import org.wso2.store.client.Constants;
 import org.wso2.store.client.common.StoreAssetClientException;
 
 public class ArtifactPublisherTool {
 
-    private static final Logger LOG = Logger.getLogger(ArtifactPublisherTool.class);
-
-    private static final String HOSTNAME = "host";
+    private static final Logger log = Logger.getLogger(ArtifactPublisherTool.class);
+    private static final String HOST_NAME = "host";
     private static final String PORT = "port";
-    private static final String USERNAME = "user";
+    private static final String USER_NAME = "user";
     private static final String PASSWORD = "pwd";
     private static final String CONTEXT = "context";
     private static final String LOCATION = "location";
@@ -49,22 +50,31 @@ public class ArtifactPublisherTool {
     public static void main(String args[]) throws StoreAssetClientException {
 
         Options options = new Options();
-        options.addOption(HOSTNAME, false, "Host Name");
+        options.addOption(HOST_NAME, false, "Host Name");
         options.addOption(PORT, false, "port");
-        options.addOption(USERNAME, false, "user name");
+        options.addOption(USER_NAME, false, "user name");
         options.addOption(PASSWORD, false, "password");
         options.addOption(CONTEXT, false, "Context");
-        options.addOption(LOCATION, false, "location");
+        options.addOption(LOCATION, true, "location");
 
-        String host = options.getOption(HOSTNAME).getValue(Constants.DEFAULT_HOST_NAME);
-        String context = options.getOption(CONTEXT).getValue(Constants.DEFAULT_CONTEXT);
-        String port = options.getOption(PORT).getValue(Constants.DEFAULT_PORT);
-        String userName = options.getOption(USERNAME).getValue(Constants.DEFAULT_USER);
-        String pwd = options.getOption(PASSWORD).getValue(Constants.DEFAULT_PWD);
-        String location = options.getOption(LOCATION).getValue();
+        BasicParser parser = new BasicParser();
+        CommandLine commandLine;
+        try {
+            commandLine = parser.parse(options, args);
+        } catch (ParseException e) {
+            String errorMsg = "Command line pass exception:";
+            log.error(errorMsg, e);
+            throw new StoreAssetClientException(e);
+        }
+        String host = commandLine.getOptionValue(HOST_NAME, ArtifactUploadClientConstants.DEFAULT_HOST_NAME);
+        String context = commandLine.getOptionValue(CONTEXT, ArtifactUploadClientConstants.DEFAULT_CONTEXT);
+        String port = commandLine.getOptionValue(PORT, ArtifactUploadClientConstants.DEFAULT_PORT);
+        String userName = commandLine.getOptionValue(USER_NAME, ArtifactUploadClientConstants.DEFAULT_USER);
+        String pwd = commandLine.getOptionValue(PASSWORD, ArtifactUploadClientConstants.DEFAULT_PWD);
+        String location = commandLine.getOptionValue(LOCATION);
 
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Host:" + host + " port:" + port + " User Name:" + userName + " Password:" + pwd + " Context:"
+        if (log.isDebugEnabled()) {
+            log.debug("Host:" + host + " port:" + port + " User Name:" + userName + " Password:" + pwd + " Context:"
                     + context + " " + "Location:" + location);
         }
         ArtifactPublisher artifactPublisher = new ArtifactPublisher();

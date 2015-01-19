@@ -88,7 +88,7 @@
                     </systemProperties>
 
                     <workingDirectory>${basedir}/target</workingDirectory>
-<testFailureIgnore>true</testFailureIgnore>
+                    <testFailureIgnore>true</testFailureIgnore>
                 </configuration>
             </plugin>
 
@@ -281,7 +281,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
         <dependency>
             <groupId>org.wso2.store</groupId>
             <artifactId>org.wso2.es.integration.common.utils</artifactId>
@@ -299,7 +298,4 @@
             <version>${project.version}</version>
         </dependency>
     </dependencies>
-
-
-
 </project>

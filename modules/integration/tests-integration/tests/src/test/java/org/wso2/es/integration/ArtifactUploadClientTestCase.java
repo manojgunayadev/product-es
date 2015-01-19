@@ -48,9 +48,8 @@ public class ArtifactUploadClientTestCase extends ESIntegrationTest {
     private String carbonHome = "";
 
     @BeforeClass(alwaysRun = true)
-    public void init()
-            throws XPathExpressionException, IOException, URISyntaxException, SAXException, XMLStreamException,
-            LoginAuthenticationExceptionException {
+    public void init() throws XPathExpressionException, IOException, URISyntaxException, SAXException,
+            XMLStreamException, LoginAuthenticationExceptionException {
 
         esContext = new AutomationContext(ESIntegrationTestConstants.ES_PRODUCT_NAME, TestUserMode.SUPER_TENANT_ADMIN);
         LoginLogoutClient loginLogoutClient = new LoginLogoutClient(esContext);
@@ -68,9 +67,7 @@ public class ArtifactUploadClientTestCase extends ESIntegrationTest {
         Process proc = Runtime.getRuntime().exec("java -jar " + carbonHome +
                 "/lib/asset-client-2.0.0-SNAPSHOT-jar-with-dependencies.jar -host " +
                 esHost + " -port " + esPort + " -user " +
-                esUser +
-                " -pwd " + esPwd + " -location " + carbonHome +
-                File.separator + "samples");
+                esUser + " -pwd " + esPwd + " -location " + carbonHome + File.separator + "samples");
         InputStream in = proc.getInputStream();
         InputStream errorIn = proc.getErrorStream();
 

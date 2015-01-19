@@ -17,6 +17,7 @@
  */
 package org.wso2.store.util;
 
+import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -27,13 +28,10 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 
 public class Configuration {
 
-    private static final Log log = LogFactory.getLog(Configuration.class);
+    private static final Logger log = Logger.getLogger(Configuration.class);
     private Map<String, List<String>> configuration = new HashMap<String, List<String>>();
 
     public Configuration(InputStream xmlInputStream) throws StoreConfigurationsException {
@@ -56,18 +54,15 @@ public class Configuration {
                 }
             }
         } catch (ParserConfigurationException parseConfigurationException) {
-
             String msg = "Parser configuration error";
             log.error(msg, parseConfigurationException);
             log.fatal(msg, parseConfigurationException);
             throw new StoreConfigurationsException("", parseConfigurationException);
         } catch (SAXException saxException) {
-
             String msg = "SAX exception occurred when passing stream";
             log.error(msg, saxException);
             throw new StoreConfigurationsException(msg, saxException);
         } catch (IOException ioException) {
-
             String msg = "IO exception occurred when passing stream";
             log.error(msg, ioException);
             throw new StoreConfigurationsException(msg, ioException);

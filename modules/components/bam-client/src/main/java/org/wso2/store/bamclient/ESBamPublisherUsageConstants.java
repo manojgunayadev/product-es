@@ -21,6 +21,6 @@ public class ESBamPublisherUsageConstants {
 
 	public static final String ES_STATISTICS_STREAM_NAME = "org.wso2.store.asset.statistics";
 	public static final String ES_STATISTICS_STREAM_VERSION = "1.0.0";
-	public static final String ASSET_STATISTICS_STREAM_VARSION = "1.0.0";
+	public static final String ASSET_STATISTICS_STREAM_VERSION = "1.0.0";
 
 }

@@ -36,6 +36,7 @@ import org.apache.log4j.Logger;
 import org.wso2.store.client.common.StoreAssetClientException;
 import org.wso2.store.client.data.Asset;
 import org.wso2.store.client.data.AuthenticationData;
+import org.wso2.store.client.util.ArtifactUploadClientConstants;
 
 import java.io.*;
 import java.security.GeneralSecurityException;
@@ -45,7 +46,7 @@ import java.util.List;
 
 /**
  * Upload assets store in a file system to ES.
- * The asset details should be related to rxt type fields and read as JSON format.
+ * The asset details should be map to rxt type fields and read as JSON format.
  */
 public class ArtifactPublisher {
 
@@ -72,7 +73,7 @@ public class ArtifactPublisher {
             throws StoreAssetClientException {
 
         init();
-        hostUrl = "https:" + host + port + context;
+        hostUrl = "https://" + host + ":" + port + "/" + context;
         sessionId = getSession(userName, pwd);
         String[] rxtArr = getRxtTypes();
 
@@ -117,17 +118,18 @@ public class ArtifactPublisher {
      */
     private String getSession(String userName, String pwd) throws StoreAssetClientException {
 
-        String authUrl = hostUrl + Constants.PUBLISHER_AUTHORIZATION_URL + "?username=" + userName + "&password=" + pwd;
+        String authUrl = hostUrl + ArtifactUploadClientConstants.PUBLISHER_AUTHORIZATION_URL + "?username=" +
+                userName + "&password=" + pwd;
         if (log.isDebugEnabled()) {
-            log.debug("log in url:" + authUrl);
+            log.debug("Log in url:" + authUrl);
         }
 
-        HttpPost httppost = new HttpPost(authUrl);
+        HttpPost httpPost = new HttpPost(authUrl);
         CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
         CloseableHttpResponse response;
-
+        String responseJson;
         try {
-            response = httpClient.execute(httppost, httpContext);
+            response = httpClient.execute(httpPost, httpContext);
         } catch (IOException ioException) {
             String errorMsg = "IO error in session fetch: " + authUrl;
             log.error(errorMsg, ioException);
@@ -135,18 +137,7 @@ public class ArtifactPublisher {
         }
 
         try {
-            String responseJson = EntityUtils.toString(response.getEntity());
-            AuthenticationData authorizeObj = gson.fromJson(responseJson, AuthenticationData.class);
-
-            if (authorizeObj.getData() != null) {
-                sessionId = authorizeObj.getData().getSessionId();
-                if (log.isDebugEnabled()) {
-                    log.debug("Logged:" + sessionId);
-                }
-            } else {
-                log.info("Login failure!!!" + responseJson);
-            }
-            return sessionId;
+             responseJson = EntityUtils.toString(response.getEntity());
         } catch (IOException ioException) {
             String msg = "IO error in decode response of login";
             log.error(msg, ioException);
@@ -167,6 +158,19 @@ public class ArtifactPublisher {
                 log.error(ioEx);
             }
         }
+        if (log.isDebugEnabled()) {
+            log.debug("Log in response:" + responseJson);
+        }
+        AuthenticationData authorizeObj = gson.fromJson(responseJson, AuthenticationData.class);
+        if (authorizeObj.getData() != null) {
+            sessionId = authorizeObj.getData().getSessionId();
+            if (log.isDebugEnabled()) {
+                log.debug("Logged:" + sessionId);
+            }
+        } else {
+            log.info("Login failure!!!" + responseJson);
+        }
+        return sessionId;
     }
 
     /**
@@ -177,15 +181,15 @@ public class ArtifactPublisher {
      */
     private String[] getRxtTypes() throws StoreAssetClientException {
 
-        String apiUrl = hostUrl + Constants.RXT_URL;
+        String apiUrl = hostUrl + ArtifactUploadClientConstants.RXT_URL;
         if (log.isDebugEnabled()) {
-            log.debug("API Url:" + apiUrl);
+            log.debug("Fetch RXT Types Url:" + apiUrl);
         }
 
         HttpGet httpGet = new HttpGet(apiUrl);
         CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
         CloseableHttpResponse response = null;
-        String responseJson = null;
+        String responseJson;
         String[] arrRxt;
 
         try {
@@ -229,17 +233,19 @@ public class ArtifactPublisher {
      */
     private List<String> getAttributesForType(String rxtType, String type) throws StoreAssetClientException {
 
-        String apiUrl = hostUrl + Constants.RXT_ATTRIBUTES_FOR_GIVEN_TYPE + "/" + rxtType + "/" + type;
+        String apiUrl = hostUrl + ArtifactUploadClientConstants.RXT_ATTRIBUTES_FOR_GIVEN_TYPE + "/" + rxtType
+                        + "/" + type;
+
         if (log.isDebugEnabled()) {
             log.debug("RXT Type:" + rxtType);
-            log.debug("type:" + type);
-            log.debug("API Url:" + apiUrl);
+            log.debug("Type:" + type);
+            log.debug("Type attributes for RXT API Url:" + apiUrl);
         }
 
         HttpGet httpGet = new HttpGet(apiUrl);
         CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
         CloseableHttpResponse response = null;
-        String responseJson = null;
+        String responseJson ;
         String[] attrArr;
 
         try {
@@ -264,7 +270,6 @@ public class ArtifactPublisher {
             } catch (IOException e) {
                 log.error(e);
             }
-
         }
         attrArr = gson.fromJson(responseJson, String[].class);
         if (log.isDebugEnabled()) {
@@ -286,18 +291,22 @@ public class ArtifactPublisher {
 
         Asset[] assetArr;
         BufferedReader br;
+        JsonParser parser;
+        JsonArray jsonArray;
 
         for (final File file : dir.listFiles()) {
             if (file.isFile()) {
-                if (file.getName().substring(file.getName().lastIndexOf(".") + 1).equals("asset")) {
+                //check files exists with .asset extension in the directory
+                if (file.getName().substring(file.getName().lastIndexOf(".") + 1)
+                        .equals(ArtifactUploadClientConstants.RESOURCE_FILE_TYPE)) {
                     try {
                         br = new BufferedReader(new FileReader(file));
-                        JsonParser parser = new JsonParser();
-                        JsonArray jsonArray = (JsonArray) parser.parse(br).getAsJsonObject().get("assets");
+                        parser = new JsonParser();
+                        jsonArray = (JsonArray) parser.parse(br).getAsJsonObject().get("assets");
                         assetArr = gson.fromJson(jsonArray, Asset[].class);
                         uploadAssets(assetArr, dir);
                     } catch (FileNotFoundException ex) {
-                        log.error("file not found " + file.getName());
+                        log.error("File not found " + file.getName());
                     }
                 }
             }
@@ -326,8 +335,8 @@ public class ArtifactPublisher {
         String responseJson;
         StringBuilder publisherUrlBuilder;
 
-        String uploadUrl = hostUrl + Constants.PUBLISHER_URL + "/";
-        HttpPost httppost;
+        String uploadUrl = hostUrl + ArtifactUploadClientConstants.PUBLISHER_URL + "/";
+        HttpPost httpPost;
         CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
         CloseableHttpResponse response = null;
 
@@ -343,28 +352,32 @@ public class ArtifactPublisher {
             multiPartBuilder.addTextBody("asset", gson.toJson(asset));
 
             attrMap = asset.getAttributes();
-            httppost = new HttpPost(publisherUrlBuilder.toString());
+            httpPost = new HttpPost(publisherUrlBuilder.toString());
 
+            //get file type attributes list for asset type
+            fileAttributes = rxtFileAttributesMap.get(asset.getType());
             for (String attrKey : attrMap.keySet()) {
-                fileAttributes = rxtFileAttributesMap.get(asset.getType());
+                //check attribute one by one whether is it a file type
                 if (fileAttributes != null && fileAttributes.contains(attrKey)) {
-                    imageFile = new File(dir + File.separator + Constants.RESOURCE_DIR_NAME + File.separator +
-                            attrMap.get(attrKey));
+                    imageFile = new File(dir + File.separator + ArtifactUploadClientConstants.RESOURCE_DIR_NAME +
+                            File.separator + attrMap.get(attrKey));
                     multiPartBuilder.addBinaryBody(attrKey, imageFile);
                 }
             }
-            httppost.setEntity(multiPartBuilder.build());
+            httpPost.setEntity(multiPartBuilder.build());
             try {
-                response = httpClient.execute(httppost, httpContext);
-                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
-                    log.info("asset " + asset.getName() + " uploaded successfully");
-                } else {
+                response = httpClient.execute(httpPost, httpContext);
+                if (response.getStatusLine().getStatusCode() == HttpStatus.SC_CREATED) {
+                    log.info("Asset " + asset.getName() + " uploaded successfully");
+                } else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_ACCEPTED) {
+                    log.info("Asset " + asset.getName() + " updated successfully");
+                }else{
                     responseJson = EntityUtils.toString(response.getEntity());
-                    log.info("asset " + asset.getName() + " not uploaded successfully " + responseJson);
+                    log.info("Asset " + asset.getName() + " not uploaded successfully " + responseJson);
                 }
             } catch (IOException ex) {
                 log.error(asset);
-                log.error("error in asset Upload", ex);
+                log.error("Error in asset Upload", ex);
             }
         }
         try {

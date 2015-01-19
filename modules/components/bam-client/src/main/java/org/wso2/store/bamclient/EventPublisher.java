@@ -124,7 +124,6 @@ public class EventPublisher {
 
             ArrayList<DataPublisherHolder> dataPublisherHolders = new ArrayList<DataPublisherHolder>();
             String[] urls = aReceiverGroupURL.split(",");
-
             for (String receiverUrl : urls) {
                 if (log.isDebugEnabled()) {
                     log.debug("Receiver url:" + receiverUrl);
@@ -155,6 +154,7 @@ public class EventPublisher {
 
         if (loadBalancingDataPublisher != null) {
             loadBalancingDataPublisher.stop();
+            loadBalancingDataPublisher = null;
         }
     }
 
