@@ -75,7 +75,7 @@ public class ArtifactPublisher {
         hostUrl = "https://" + host + ":" + port + "/" + context;
         sessionId = getSession(userName, pwd);
         String[] rxtArr = getRxtTypes();
-        List<String> fileTypeAttributesList = null;
+        List<String> fileTypeAttributesList;
 
         for (String rxtType : rxtArr) {
             fileTypeAttributesList = getAttributesForType(rxtType, "file");
