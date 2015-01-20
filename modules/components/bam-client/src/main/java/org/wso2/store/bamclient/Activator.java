@@ -23,17 +23,19 @@ import org.osgi.framework.BundleContext;
 
 public class Activator implements BundleActivator {
 
-	private static final Logger LOG = Logger.getLogger(EventPublisher.class);
+	private static final Logger log = Logger.getLogger(EventPublisher.class);
 
 	@Override
 	public void start(BundleContext bundleContext) throws Exception {
-
+        if (log.isDebugEnabled()) {
+            log.debug("Start BAM client bundle");
+        }
 	}
 
 	@Override
 	public void stop(BundleContext bundleContext) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("BAM client bundle shut down");
+        if (log.isDebugEnabled()) {
+            log.debug("BAM client bundle shut down");
         }
 		EventPublisher.shutDownPublisher();
 	}

@@ -20,6 +20,7 @@ package org.wso2.store.client;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -29,6 +30,7 @@ import org.apache.http.conn.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
@@ -57,6 +59,7 @@ public class ArtifactPublisher {
     private SSLConnectionSocketFactory sslConnectionSocketFactory;
     private BasicHttpContext httpContext;
     private Gson gson;
+    private HttpClientBuilder clientBuilder;
 
     /**
      * Publish asset details to given ES host.
@@ -71,6 +74,11 @@ public class ArtifactPublisher {
     public void publishArtifacts(String host, String context, String port, String userName, String pwd, String location)
             throws StoreAssetClientException {
 
+        if (location == null || location.length() == 0) {
+            String errorMsg = "The resource location should not be empty";
+            log.error(errorMsg);
+            throw new StoreAssetClientException(errorMsg);
+        }
         init();
         hostUrl = "https://" + host + ":" + port + "/" + context;
         sessionId = getSession(userName, pwd);
@@ -79,14 +87,9 @@ public class ArtifactPublisher {
 
         for (String rxtType : rxtArr) {
             fileTypeAttributesList = getAttributesForType(rxtType, "file");
-            if (fileTypeAttributesList!=null && !fileTypeAttributesList.isEmpty()) {
+            if (fileTypeAttributesList != null && !fileTypeAttributesList.isEmpty()) {
                 rxtFileAttributesMap.put(rxtType, getAttributesForType(rxtType, "file"));
             }
-        }
-        if (location == null || location.length() == 0) {
-            String errorMsg = "The resource location should not be empty";
-            log.error(errorMsg);
-            throw new StoreAssetClientException(errorMsg);
         }
         File samplesDirectory = new File(location);
         readAssets(samplesDirectory);
@@ -108,6 +111,7 @@ public class ArtifactPublisher {
             String errorMsg = "SSL initiation fail.general security exception";
             throw new StoreAssetClientException(errorMsg, genSecEx);
         }
+        clientBuilder = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory);
         gson = new Gson();
     }
 
@@ -127,7 +131,7 @@ public class ArtifactPublisher {
         }
 
         HttpPost httpPost = new HttpPost(authUrl);
-        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+        CloseableHttpClient httpClient = clientBuilder.build();
         CloseableHttpResponse response;
         String responseJson;
         try {
@@ -139,26 +143,14 @@ public class ArtifactPublisher {
         }
 
         try {
-             responseJson = EntityUtils.toString(response.getEntity());
+            responseJson = EntityUtils.toString(response.getEntity());
         } catch (IOException ioException) {
             String msg = "IO error in decode response of login";
             log.error(msg, ioException);
             throw new StoreAssetClientException(msg, ioException);
         } finally {
-            try {
-                if (response != null) {
-                    response.close();
-                }
-            } catch (IOException ioEx) {
-                log.error(ioEx);
-            }
-            try {
-                if (httpClient != null) {
-                    httpClient.close();
-                }
-            } catch (IOException ioEx) {
-                log.error(ioEx);
-            }
+            IOUtils.closeQuietly(response);
+            IOUtils.closeQuietly(httpClient);
         }
         if (log.isDebugEnabled()) {
             log.debug("Log in response:" + responseJson);
@@ -189,7 +181,7 @@ public class ArtifactPublisher {
         }
 
         HttpGet httpGet = new HttpGet(apiUrl);
-        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+        CloseableHttpClient httpClient = clientBuilder.build();
         CloseableHttpResponse response = null;
         String responseJson;
         String[] arrRxt;
@@ -202,20 +194,8 @@ public class ArtifactPublisher {
             log.error(errorMsg, ioException);
             throw new StoreAssetClientException(errorMsg, ioException);
         } finally {
-            try {
-                if (response != null) {
-                    response.close();
-                }
-            } catch (IOException e) {
-                log.error(e);
-            }
-            try {
-                if (httpClient != null) {
-                    httpClient.close();
-                }
-            } catch (IOException e) {
-                log.error(e);
-            }
+            IOUtils.closeQuietly(response);
+            IOUtils.closeQuietly(httpClient);
         }
         if (log.isDebugEnabled()) {
             log.debug("RXT types:" + responseJson);
@@ -236,7 +216,7 @@ public class ArtifactPublisher {
     private List<String> getAttributesForType(String rxtType, String type) throws StoreAssetClientException {
 
         String apiUrl = hostUrl + ArtifactUploadClientConstants.RXT_ATTRIBUTES_FOR_GIVEN_TYPE + "/" + rxtType
-                        + "/" + type;
+                + "/" + type;
 
         if (log.isDebugEnabled()) {
             log.debug("RXT Type:" + rxtType);
@@ -245,9 +225,9 @@ public class ArtifactPublisher {
         }
 
         HttpGet httpGet = new HttpGet(apiUrl);
-        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+        CloseableHttpClient httpClient = clientBuilder.build();
         CloseableHttpResponse response = null;
-        String responseJson ;
+        String responseJson;
         String[] attrArr;
 
         try {
@@ -258,20 +238,8 @@ public class ArtifactPublisher {
             log.error(errorMsg, ioException);
             throw new StoreAssetClientException(errorMsg, ioException);
         } finally {
-            try {
-                if (response != null) {
-                    response.close();
-                }
-            } catch (IOException e) {
-                log.error(e);
-            }
-            try {
-                if (httpClient != null) {
-                    httpClient.close();
-                }
-            } catch (IOException e) {
-                log.error(e);
-            }
+            IOUtils.closeQuietly(response);
+            IOUtils.closeQuietly(httpClient);
         }
         attrArr = gson.fromJson(responseJson, String[].class);
         if (log.isDebugEnabled()) {
@@ -335,7 +303,7 @@ public class ArtifactPublisher {
 
         String uploadUrl = hostUrl + ArtifactUploadClientConstants.PUBLISHER_URL + "/";
         HttpPost httpPost;
-        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+        CloseableHttpClient httpClient = clientBuilder.build();
         CloseableHttpResponse response = null;
 
         for (Asset asset : assetArr) {
@@ -369,28 +337,18 @@ public class ArtifactPublisher {
                     log.info("Asset " + asset.getName() + " uploaded successfully");
                 } else if (response.getStatusLine().getStatusCode() == HttpStatus.SC_ACCEPTED) {
                     log.info("Asset " + asset.getName() + " updated successfully");
-                }else{
+                } else {
                     responseJson = EntityUtils.toString(response.getEntity());
                     log.info("Asset " + asset.getName() + " not uploaded successfully " + responseJson);
                 }
             } catch (IOException ex) {
                 log.error(asset);
                 log.error("Error in asset Upload", ex);
+            } finally {
+                IOUtils.closeQuietly(response);
             }
         }
-        try {
-            if (response != null) {
-                response.close();
-            }
-        } catch (IOException e) {
-            log.error(e);
-        }
-        try {
-            if (httpClient != null) {
-                httpClient.close();
-            }
-        } catch (IOException e) {
-            log.error(e);
-        }
+        IOUtils.closeQuietly(response);
+        IOUtils.closeQuietly(httpClient);
     }
 }

@@ -52,11 +52,13 @@
                             org.osgi.framework,
                             org.osgi.service.component,
                             org.apache.log4j.*,
+                            org.w3c.dom.*,
+                            javax.xml.parsers.*,
+                            org.xml.sax.*
                         </Import-Package>
                         <Export-Package>
                             org.wso2.store.util.*
                         </Export-Package>
-                        <DynamicImport-Package>*</DynamicImport-Package>
                     </instructions>
                 </configuration>
             </plugin>
