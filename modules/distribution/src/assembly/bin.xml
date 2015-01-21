@@ -275,7 +275,7 @@
                 <include>build.xml</include>
                 <include>*.txt</include>
                 <include>sample-gadgets*/*/*</include>
-                <include>sample-gadgets/*.json</include>
+                <include>sample-gadgets/*.asset</include>
             </includes>
             <outputDirectory>${project.artifactId}-${project.version}/samples</outputDirectory>
         </fileSet>

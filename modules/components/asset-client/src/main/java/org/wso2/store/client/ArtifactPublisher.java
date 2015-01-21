@@ -265,8 +265,7 @@ public class ArtifactPublisher {
         for (final File file : dir.listFiles()) {
             if (file.isFile()) {
                 //check files exists with .asset extension in the directory
-                if (file.getName().substring(file.getName().lastIndexOf(".") + 1)
-                        .equals(ArtifactUploadClientConstants.RESOURCE_FILE_TYPE)) {
+                if (file.getName().endsWith(ArtifactUploadClientConstants.RESOURCE_FILE_TYPE)){
                     try {
                         br = new BufferedReader(new FileReader(file));
                         parser = new JsonParser();

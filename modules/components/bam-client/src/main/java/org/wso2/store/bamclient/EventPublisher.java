@@ -178,18 +178,20 @@ public class EventPublisher {
             log.debug("Meta Data:" + metaData);
             log.debug("Data:" + data);
         }
-        if (!loadBalancingDataPublisher.isStreamDefinitionAdded(streamName, streamVersion)) {
-            loadBalancingDataPublisher.addStreamDefinition(streamDefinition, streamName, streamVersion);
-            if (log.isDebugEnabled()) {
-                log.debug("Stream created:" + streamName);
+        if (data !=null && !data.isEmpty()) {
+            if (!loadBalancingDataPublisher.isStreamDefinitionAdded(streamName, streamVersion)) {
+                loadBalancingDataPublisher.addStreamDefinition(streamDefinition, streamName, streamVersion);
+                if (log.isDebugEnabled()) {
+                    log.debug("Stream created:" + streamName);
+                }
             }
-        }
-        try {
-            loadBalancingDataPublisher.publish(streamName, streamVersion, System.currentTimeMillis(), null,
-                    new Object[] { "es" }, data.split(","));
-        } catch (AgentException e) {
-            log.error("Data publish error", e);
-            throw new StoreBAMClientException("Data publish error", e);
+            try {
+                loadBalancingDataPublisher.publish(streamName, streamVersion, System.currentTimeMillis(), null,
+                        new Object[] { "es" }, data.split(","));
+            } catch (AgentException e) {
+                log.error("Data publish error", e);
+                throw new StoreBAMClientException("Data publish error", e);
+            }
         }
     }
 

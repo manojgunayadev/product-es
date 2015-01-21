@@ -19,7 +19,7 @@ package org.wso2.store.client.data;
 
 public class AuthenticationData {
 
-    private Integer code;
+    private int code;
     private String message;
     private AuthorizeData data;
 
