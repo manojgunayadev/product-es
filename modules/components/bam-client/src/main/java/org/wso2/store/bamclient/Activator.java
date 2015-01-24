@@ -21,6 +21,10 @@ import org.apache.log4j.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
+/**
+ *  BAM client OSGI Bundle activator.
+ *  The stop method calls shut down method and kills all connections to BAM.
+ */
 public class Activator implements BundleActivator {
 
 	private static final Logger log = Logger.getLogger(EventPublisher.class);

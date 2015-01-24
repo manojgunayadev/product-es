@@ -17,6 +17,10 @@
  */
 package org.wso2.store.bamclient;
 
+/**
+ * Constants use for event publishing purposes.
+ * These constants uses through out the ES via jag pages and java components.
+ */
 public class ESBamPublisherUsageConstants {
 
 	public static final String ES_STATISTICS_STREAM_NAME = "org.wso2.store.asset.statistics";
