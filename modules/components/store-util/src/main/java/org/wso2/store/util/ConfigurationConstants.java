@@ -17,10 +17,14 @@
  */
 package org.wso2.store.util;
 
+/**
+ * Constants use for read configurations in ES.
+ * Represents elements in configuration files.
+ * Ex -: es-bam.xml file elements bamhost, userName
+ *
+ */
 public class ConfigurationConstants {
 
-    public static String BAM_CLIENT_STORE = "clientTrustStorePath";
-    public static String BAM_TRUST_STORE_PWD = "trustStorePassword";
     public static String BAM_HOST = "bamhost";
     public static String BAM_USERNAME = "userName";
     public static String BAM_PWD = "password";
