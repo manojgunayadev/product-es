@@ -341,8 +341,9 @@ public class ArtifactPublisher {
                     log.info("Asset " + asset.getName() + " not uploaded successfully " + responseJson);
                 }
             } catch (IOException ex) {
-                log.error(asset);
+                log.error("Asset Id:"+asset.getId()+" Name;"+asset.getName());
                 log.error("Error in asset Upload", ex);
+                log.debug("Asset upload fail:"+asset);
             } finally {
                 IOUtils.closeQuietly(response);
             }
