@@ -285,6 +285,18 @@
             <outputDirectory>${project.artifactId}-${project.version}/samples</outputDirectory>
         </fileSet>
 
+<<<<<<< HEAD
+=======
+       <fileSet>
+        <directory>../p2-profile-gen/target/wso2carbon-core-${carbon.kernel.version}/repository/samples</directory>
+        <outputDirectory>${project.artifactId}-${project.version}/samples</outputDirectory>
+       </fileSet>
+        <fileSet>
+            <directory>src/repository/samples</directory>
+            <outputDirectory>${project.artifactId}-${project.version}/samples</outputDirectory>
+        </fileSet>
+        
+>>>>>>> upstream/master
     </fileSets>
     <dependencySets>
         <!--        <dependencySet>

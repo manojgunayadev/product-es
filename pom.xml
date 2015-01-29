@@ -33,6 +33,7 @@
     </licenses>
     <modules>
         <module>modules/components/store-admin</module>
+<<<<<<< HEAD
         <module>modules/components/jaggery-scxml-executors</module>
         <module>modules/components/notifications</module>
         <module>modules/components/social</module>
@@ -41,6 +42,16 @@
         <module>modules/components/store-util</module>
         <module>modules/components/asset-client</module>
         <module>modules/components/bam-client</module>
+=======
+        <!--<module>modules/components/jaggery-scxml-executors</module>-->
+        <!--<module>modules/components/notifications</module>-->
+        <!--<module>modules/components/social</module>-->
+        <!--<module>modules/components/sso-common</module>-->
+        <!--<module>modules/jaggery-modules</module>-->
+        <!--<module>modules/components/asset-client</module>-->
+        <!--<module>modules/components/store-util</module>-->
+        <!--<module>modules/components/bam-client</module>-->
+>>>>>>> upstream/master
         <module>modules/features</module>
         <module>modules/p2-profile-gen</module>
         <module>modules/distribution</module>
